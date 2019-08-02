@@ -1,9 +1,15 @@
 import os
+import configparser
 
-pg_db_username = 'postgres'
-pg_db_password = 'Qwerty123'
-pg_db_name = 'Tickets'
-pg_db_hostname = 'localhost'
+cfg_parser = configparser.ConfigParser()
+
+cfg_parser.read("./app.ini")
+
+pg_db_username = cfg_parser["database"]["pg_db_username"] or 'postgres'
+pg_db_password = cfg_parser["database"]["pg_db_password"] or 'Qwerty123'
+pg_db_name = cfg_parser["database"]["pg_db_name"]or 'Tickets'
+pg_db_hostname = cfg_parser["database"]["pg_db_hostname"] or 'localhost'
+
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 
