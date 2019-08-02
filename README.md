@@ -34,9 +34,10 @@ Example, request body:
 ```
 
 
-* GET http://localhost:5000/tickets/<int:id> - get info about ticket by id
+* GET http://localhost:5000/tickets/id - get info about ticket by id
 
-* PATCH http://localhost:5000/tickets - update status of ticket
+* PATCH http://localhost:5000/tickets - update status of the ticket
+
 Example, request body:
 ```json
 {
@@ -54,6 +55,7 @@ Example, request body:
 ```
 
 * POST http://localhost:5000/comments - add comment to the ticket
+
 Example, request body:
 ```json
 {
