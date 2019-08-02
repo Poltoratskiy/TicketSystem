@@ -8,7 +8,7 @@ First, clone the repository to your local machine:
 git clone https://github.com/Poltoratskiy/TicketSystem.git
 ```
 
-Change database connection configs in ***app.configs.py***
+Change database connection configs in ***app.ini***
 
 Install modules:
 ```bash
