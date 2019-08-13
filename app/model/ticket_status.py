@@ -1,20 +1,24 @@
 # -*- coding: utf-8 -*-
 
 from app_init import db
-import datetime
-import json
-from sqlalchemy import Enum
+import enum
 
-statuses = ('открыт', 'отвечен', 'закрыт', 'ожидает ответа')
 
-status_enum = Enum(*statuses, name="status")
+class TicketStatusEnum(enum.Enum):
+    opened = enum.auto()
+    answered = enum.auto()
+    closed = enum.auto()
+    waiting = enum.auto()
+
+    def __str__(self):
+        return self.string
 
 
 class TicketStatus(db.Model):
     __tablename__ = "ticket_status"
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    name = db.Column(status_enum)
+    name = db.Column(db.Enum(TicketStatusEnum))
     ticket = db.relationship('Ticket')
 
     def __repr__(self):
@@ -27,5 +31,6 @@ class TicketStatus(db.Model):
         """
         return {
             "id": self.id,
-            "name": self.name
+            "name": TicketStatusEnum(self.id).name
         }
+

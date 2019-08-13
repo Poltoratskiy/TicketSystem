@@ -53,8 +53,8 @@ class Ticket(db.Model):
         :return:
         """
         new_status = TicketStatus.query.filter_by(id=new_status_id).first()
-        if self.status.name == "открыт" and new_status.name in ["отвечен", "закрыт"]:
+        if self.status.name == "opened" and new_status.name in ["answered", "closed"]:
             return True
-        elif self.status.name == "отвечен" and new_status.name in ["ожидает ответа", "закрыт"]:
+        elif self.status.name == "answered" and new_status.name in ["waiting", "closed"]:
             return True
         return False

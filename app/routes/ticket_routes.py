@@ -1,10 +1,13 @@
 from flask import current_app as app
+from sqlalchemy import exc
+from validate_email import validate_email
+import traceback
+import json
+from flask import request
+from flask import abort
+
 from app.model.ticket_status import TicketStatus
 from app.model.ticket import Ticket, db
-from validate_email import validate_email
-import ast
-import json
-from flask import jsonify, request
 
 
 @app.route('/tickets/<int:id_>', methods=['GET'])
@@ -16,13 +19,11 @@ def get_tickets(id_):
     """
     ticket = Ticket.query.filter_by(id=id_).first()
     if ticket is None:
-        response = app.response_class(status=404,
-                                      mimetype='application/json')
-        return response
-    response = app.response_class(response=ticket.json(),
-                                  status=200,
-                                  mimetype='application/json')
-    return response
+        abort(404)
+
+    return app.response_class(response=ticket.json(),
+                              status=200,
+                              mimetype='application/json')
 
 
 @app.route('/tickets', methods=['POST'])
@@ -32,26 +33,25 @@ def create_ticket():
     :return:
     """
     data = json.loads(request.data)
-    theme = str(data.get('theme'))
-    text = str(data.get('text'))
-    email = str(data.get('email'))
+    print(data)
+
+    theme = data.get('theme')
+    text = data.get('text')
+    email = data.get('email')
     if not data or theme is None or email is None or not validate_email(email):
-        response = app.response_class(status=400,
-                                      mimetype='application/json')
-        return response
+        abort(400)
     try:
         ticket = Ticket(theme=theme, text=text, email=email)
         db.session.add(ticket)
         db.session.commit()
-        response = app.response_class(response=ticket.json(),
-                                      status=200,
-                                      mimetype='application/json')
-        return response
-    except Exception as e:
+        return app.response_class(response=ticket.json(),
+                                  status=200,
+                                  mimetype='application/json')
+    except exc.SQLAlchemyError:
+        print(f'''Error: \n {traceback.format_exc()}''')
         db.session.rollback()
-        response = app.response_class(status=501,
-                                      mimetype='application/json')
-        return response
+        abort(501)
+
     finally:
         db.session.close()
 
@@ -71,31 +71,26 @@ def update_ticket():
     status = data.get('status')
     status_id = status.get('id')
     if not data or ticket_id is None or status is None or status_id is None:
-        response = app.response_class(status=400,
-                                      mimetype='application/json')
-        return response
+        abort(400)
     try:
         new_status = TicketStatus.query.filter_by(id=status_id).first()
         ticket = Ticket.query.filter_by(id=ticket_id).first()
         if new_status is None or ticket is None:
-            response = app.response_class(status=400,
-                                          mimetype='application/json')
-            return response
+            abort(400)
+
         flag = ticket.change_status_check(new_status.id)
         if not flag:
-            response = app.response_class(status=403,
-                                          mimetype='application/json')
-            return response
+            abort(403)
+
         ticket.status_id = new_status.id
         db.session.commit()
         response = app.response_class(response=ticket.json(),
                                       status=200,
                                       mimetype='application/json')
         return response
-    except Exception as e:
+    except exc.SQLAlchemyError:
+        print(f'''Error: \n {traceback.format_exc()}''')
         db.session.rollback()
-        response = app.response_class(status=501,
-                                      mimetype='application/json')
-        return response
+        abort(501)
     finally:
         db.session.close()

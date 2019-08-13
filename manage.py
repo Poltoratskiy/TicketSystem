@@ -1,7 +1,8 @@
 import os
 from flask_migrate import Migrate, MigrateCommand
+from sqlalchemy import exc
 from flask_script import Manager
-from sqlalchemy.exc import IntegrityError
+from psycopg2 import errors
 from app_init import create_app, db
 from app.model import *
 
@@ -16,24 +17,25 @@ manager = Manager(app)
 
 migrate = Migrate(app, db)
 
+manager.add_command('db', MigrateCommand)
 
-# manager.add_command('db', MigrateCommand)
 
-
-# @manager.command
+@manager.command
 def run():
     app.run()
 
 
-# @manager.command
+@manager.command
 def add_dicts():
+    status = []
     try:
-        for i, s in enumerate(["открыт", "отвечен", "закрыт", "ожидает ответа"]):
-            status = ticket_status.TicketStatus(id=i + 1, name=s)
-            db.session.add(status)
-            db.session.commit()
-    except Exception as e:
-        pass
+        for i, s in enumerate(['opened', 'answered', 'closed', 'waiting']):
+            status.append(ticket_status.TicketStatus(id=i + 1, name=s))
+        print(status)
+        db.session.add_all(status)
+        db.session.commit()
+    except (exc.IntegrityError, exc.SQLAlchemyError, exc.DBAPIError) as e:
+        print(e)
 
 
 if __name__ == '__main__':
